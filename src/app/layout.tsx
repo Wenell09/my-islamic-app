@@ -5,8 +5,7 @@ import { ThemeProvider } from '@/components/theme-provider';
 import { Toaster } from '@/components/ui/toaster';
 
 export const metadata: Metadata = {
-    manifest: "/manifest.json",
-      themeColor: "#16a34a",
+  manifest: "/manifest.json",
   title: 'MyIslamic - Sahabat Spiritual Anda',
   description: 'Kelola ibadah harian, baca Al-Quran, dan pantau aktivitas ibadah dengan gaya modern.',
 };

@@ -26,10 +26,13 @@ import { useLocation } from "@/hooks/use-location"
 import { prayerService } from "@/services/prayer-service"
 import { PrayerSchedule } from "@/app/lib/prayer-data"
 
+
+
 export default function Home() {
   const { province, city, isLoaded } = useLocation()
   const [schedule, setSchedule] = useState<PrayerSchedule | null>(null)
   const [countdown, setCountdown] = useState({ h: "00", m: "00", s: "00" })
+  const [hijriDate, setHijriDate] = useState<string>("Memuat...")
 
   useEffect(() => {
     if (isLoaded) {
@@ -42,6 +45,34 @@ export default function Home() {
       })
     }
   }, [province, city, isLoaded])
+
+  useEffect(() => {
+  if (!schedule?.tanggal_lengkap) return
+  const fetchHijri = async () => {
+    try {
+      // format dari equran: 2026-03-04
+      const [year, month, day] = schedule.tanggal_lengkap.split("-")
+      // format yang dibutuhkan AlAdhan: DD-MM-YYYY
+      const formattedDate = `${day}-${month}-${year}`
+
+      const res = await fetch(
+        `https://api.aladhan.com/v1/gToH?date=${formattedDate}`
+      )
+      const json = await res.json()
+      if (json?.data?.hijri) {
+        const h = json.data.hijri
+
+        // contoh: 24 Sha'ban 1447
+        setHijriDate(`${h.day} ${h.month.en} ${h.year}`)
+      }
+    } catch (error) {
+      console.error("Hijri conversion failed:", error)
+      setHijriDate("—")
+    }
+  }
+
+  fetchHijri()
+}, [schedule?.tanggal_lengkap])
 
   const prayers = useMemo(() => {
     if (!schedule) return []
@@ -96,14 +127,6 @@ export default function Home() {
 
     return () => clearInterval(timer)
   }, [nextPrayer.time])
-
-  const hijriDate = useMemo(() => {
-    return new Intl.DateTimeFormat('id-ID-u-ca-islamic-umalqura-nu-latn', {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric'
-    }).format(new Date())
-  }, [])
 
   const gregorianDate = useMemo(() => {
     return new Date().toLocaleDateString('id-ID', { 
